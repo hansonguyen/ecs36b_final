@@ -15,15 +15,10 @@ void Motorcycle::setName(string n) {this->name = n;}
 
 string Motorcycle::getName() {return this->name;}
 
-Json::Value
-Motorcycle::dump2JSON
-() {
-    Json::Value result {};
-    result["name"] = this->name;
-    return result;
-}
-
-bool Motorcycle::JSON2Object(Json::Value arg) {
-    this->name = (arg["name"]).asString();
-    return true;
+void Motorcycle::calculate() {
+    /* TODO
+        Edit function to properly calculate collision score for motorcycles
+    */
+    double score = this->getSafetyRating() * this->getValue();
+    this->setCollisionScore(score);
 }

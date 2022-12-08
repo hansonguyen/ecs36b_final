@@ -19,8 +19,6 @@ class Motorcycle : public Automobile {
 
         string getName();
 
-        Json::Value dump2JSON();
-
-        bool JSON2Object(Json::Value);
+        void calculate();
 };
 #endif

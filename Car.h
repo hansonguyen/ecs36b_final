@@ -18,5 +18,7 @@ class Car : public Automobile {
         void setName(string n);
 
         string getName();
+
+        void calculate();
 };
 #endif

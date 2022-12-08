@@ -16,18 +16,64 @@
 // ecs36b
 #include <time.h>
 #include "hw5server.cpp"
+#include "hw5client.h"
 
 using namespace jsonrpc;
 using namespace std;
 
 int main() {
-    // Run Right Motorcycle Server
+    // Create Initial Objects
+    Motorcycle myMotorcycle;
+    myMotorcycle.setID(2);
+    myMotorcycle.setModel("Yamaha");
+    myMotorcycle.setCargo("None");
+    myMotorcycle.setPassengers(2);
+    myMotorcycle.setSafetyRating(3);
+    myMotorcycle.setValue(2.5);
+    myMotorcycle.calculate();
+    cout << "Right  Motorcycle Information:" << endl << myMotorcycle.dump2JSON().toStyledString() << endl;
+
+    // Run Left Motorcycle Server
     HttpServer httpserver(7375);
     Myhw5Server s(httpserver, JSONRPC_SERVER_V1V2, "Right Motorcycle");
-    s.StartListening();
-    std::cout << "Hit enter to stop the server" << endl;
-    getchar();
+    while (!s.isDone) {
+        s.StartListening();
+    }
 
+    // Client for Car
+    HttpClient httpclient("http://127.0.0.1:7373");
+    hw5Client myClient(httpclient, JSONRPC_CLIENT_V2);
+    Json::Value myv;
+    Json::Value gps;
+    gps["location"] = "car";
+
+    // Access everything in Car map
+    for (auto it = s.Car_Map.begin(); it != s.Car_Map.end(); it++) {
+        // Send Right Motorcycle info to car
+        if (s.Car_Map[it->first]->getWarning() == "Crashing") {
+            try {
+            myv = myClient.move("move", "Motorcycle",
+                    myMotorcycle.dump2JSON(),
+                    gps,
+                    "Right Motorcycle");
+            cout << "Sending Right Motorcycle Info back to Car Server..." << endl;
+            } catch (JsonRpcException &e) {
+            cerr << e.what() << endl;
+            }
+        }
+    }
+
+    // Run when done moving objects
+    Json::Value done;
+    try {
+    done = myClient.end();
+    } catch (JsonRpcException &e) {
+    cerr << e.what() << endl;
+    }
+
+    // Wait for character input to stop server
+    cout << "Press enter to stop server" << endl;
+    getchar();
     s.StopListening();
 
     return 0;

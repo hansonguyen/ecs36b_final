@@ -18,6 +18,7 @@
 #include "Person.h"
 #include "Thing.h"
 #include "Truck.h"
+#include "Motorcycle.h"
 #include "Car.h"
 #include <time.h>
 
@@ -44,6 +45,8 @@ public:
     std::map<std::string, Person *> Person_Map;
     std::map<std::string, Truck *> Truck_Map;
     std::map<std::string, Car *> Car_Map;
+    std::map<std::string, Motorcycle *> Motorcycle_Map;
+
     bool isDone = false;
 };
 
@@ -111,6 +114,18 @@ Myhw5Server::move
       Car_Map[object_id] = lv_car_ptr;
     }
     lv_car_ptr->JSON2Object(json_object);
+  }
+  // If object being moved is a Motorcycle
+  else if (class_id == "Motorcycle") {
+    Motorcycle * lv_motorcycle_ptr;
+
+    if (Motorcycle_Map.find(object_id) != Motorcycle_Map.end()) {
+      lv_motorcycle_ptr = Motorcycle_Map[object_id];
+    } else {
+      lv_motorcycle_ptr = new Motorcycle {};
+      Motorcycle_Map[object_id] = lv_motorcycle_ptr;
+    }
+    lv_motorcycle_ptr->JSON2Object(json_object);
   }
   result = json_object;
 

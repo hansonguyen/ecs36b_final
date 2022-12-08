@@ -16,23 +16,65 @@
 // ecs36b
 #include <time.h>
 #include "hw5server.cpp"
+#include "hw5client.h"
 
 using namespace jsonrpc;
 using namespace std;
 
 int main() {
+    // Create Initial Objects
+    Motorcycle myMotorcycle;
+    myMotorcycle.setID(1);
+    myMotorcycle.setModel("Honda");
+    myMotorcycle.setCargo("Backpack");
+    myMotorcycle.setPassengers(1);
+    myMotorcycle.setSafetyRating(4.5);
+    myMotorcycle.setValue(2);
+    myMotorcycle.calculate();
+    cout << "Left Motorcycle Information:" << endl << myMotorcycle.dump2JSON().toStyledString() << endl;
+
     // Run Left Motorcycle Server
     HttpServer httpserver(7374);
     Myhw5Server s(httpserver, JSONRPC_SERVER_V1V2, "Left Motorcycle");
     while (!s.isDone) {
         s.StartListening();
     }
-    s.StopListening();
 
-    // Access everything in Truck map
+    // Client for Car
+    HttpClient httpclient("http://127.0.0.1:7373");
+    hw5Client myClient(httpclient, JSONRPC_CLIENT_V2);
+    Json::Value myv;
+    Json::Value gps;
+    gps["location"] = "car";
+
+    // Access everything in Car map
     for (auto it = s.Car_Map.begin(); it != s.Car_Map.end(); it++) {
-        cout << "Safety Rating: " << s.Car_Map[it->first]->getSafetyRating() << endl;
+        // Send Left Motorcycle info to car
+        if (s.Car_Map[it->first]->getWarning() == "Crashing") {
+            try {
+            myv = myClient.move("move", "Motorcycle",
+                    myMotorcycle.dump2JSON(),
+                    gps,
+                    "Left Motorcycle");
+            cout << "Sending Left Motorcycle Info  back to Car Server..." << endl;
+            } catch (JsonRpcException &e) {
+            cerr << e.what() << endl;
+            }
+        }
     }
+
+    // Run when done moving objects
+    Json::Value done;
+    try {
+    done = myClient.end();
+    } catch (JsonRpcException &e) {
+    cerr << e.what() << endl;
+    }
+
+    // Wait for character input to stop server
+    cout << "Press enter to stop server" << endl;
+    getchar();
+    s.StopListening();
 
     return 0;
 }
